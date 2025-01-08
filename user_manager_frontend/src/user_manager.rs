@@ -1,22 +1,30 @@
-use chrono::NaiveDate;
-use gloo_net::http::Request;
-use serde::Deserialize;
-use sha2::{Digest, Sha256};
+// src/user_manager.rs
 
+use chrono::NaiveDate;
+use implicit_clone::ImplicitClone;
+use sha2::{Digest, Sha256};
+use std::marker::PhantomData;
+use web_sys::console; // For logging
+
+/// Enum representing the state of a user.
 #[derive(Clone)]
 pub enum UserState {
     Unauthorized(UserManager<Unauthorized>),
     Authorized(UserManager<Authorized>),
 }
 
+/// Struct representing an authorized user.
 #[derive(Clone)]
 pub struct Authorized;
+
+/// Struct representing an unauthorized user.
 #[derive(Clone)]
 pub struct Unauthorized;
 
+/// Generic struct for managing user data, parameterized by state.
 #[derive(Clone)]
 pub struct UserManager<State = Unauthorized> {
-    state: std::marker::PhantomData<State>,
+    state: PhantomData<State>,
     username: String,
     email: String,
     password_hash: String,
@@ -25,13 +33,15 @@ pub struct UserManager<State = Unauthorized> {
 }
 
 impl UserManager<Authorized> {
+    /// Get the user's name.
     pub fn get_name(&self) -> &str {
         &self.name
     }
 
+    /// Logout the user, transitioning to Unauthorized state.
     pub fn logout(self) -> UserState {
         UserState::Unauthorized(UserManager {
-            state: std::marker::PhantomData,
+            state: PhantomData,
             username: self.username,
             email: self.email,
             password_hash: self.password_hash,
@@ -39,33 +49,18 @@ impl UserManager<Authorized> {
             birthday: self.birthday,
         })
     }
-
-    pub async fn fetch_weather(city: &str, api_key: &str) -> Result<WeatherResponse, String> {
-        let url = format!(
-            "https://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric",
-            city, api_key
-        );
-
-        let response = Request::get(&url).send().await.map_err(|e| e.to_string())?;
-
-        if response.ok() {
-            response
-                .json::<WeatherResponse>()
-                .await
-                .map_err(|e| e.to_string())
-        } else {
-            Err(format!("API-feil: {}", response.status()))
-        }
-    }
 }
 
 impl UserManager<Unauthorized> {
+    /// Login the user with email and password.
     pub fn login(self, email: &str, password: &str) -> Result<UserState, String> {
         if email != self.email || UserManager::hash_password(password) != self.password_hash {
+            console::log_1(&"Login failed: Invalid email or password.".into());
             Err("Feil e-post eller passord".to_string())
         } else {
+            console::log_1(&"Login succeeded.".into());
             Ok(UserState::Authorized(UserManager {
-                state: std::marker::PhantomData,
+                state: PhantomData,
                 username: self.username,
                 email: self.email,
                 password_hash: self.password_hash,
@@ -77,6 +72,7 @@ impl UserManager<Unauthorized> {
 }
 
 impl UserManager {
+    /// Create a new UserManager instance, initially in Unauthorized state.
     pub fn new(
         username: String,
         email: String,
@@ -85,8 +81,9 @@ impl UserManager {
         birthday: NaiveDate,
     ) -> UserState {
         let password_hash = Self::hash_password(&password);
+        console::log_1(&"Created new UserManager in Unauthorized state.".into());
         UserState::Unauthorized(UserManager {
-            state: Default::default(),
+            state: PhantomData,
             username,
             email,
             password_hash,
@@ -95,26 +92,10 @@ impl UserManager {
         })
     }
 
+    /// Hash a password using SHA256.
     fn hash_password(password: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(password);
         format!("{:x}", hasher.finalize())
     }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct WeatherResponse {
-    pub main: Main,
-    pub weather: Vec<Weather>,
-    pub name: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Main {
-    pub temp: f64,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Weather {
-    pub description: String,
 }

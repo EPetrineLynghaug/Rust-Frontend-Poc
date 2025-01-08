@@ -1,14 +1,15 @@
 [package]
-name = "user_manager_frontend"
+name = "rust_typing_poc"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+yew = { version = "0.20", features = ["csr"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-gloo-net = "0.6.0"
-chrono = "0.4.39"
 sha2 = "0.10"
-web-sys = "0.3.76"
-yew = { version = "0.21", features = ["csr"] }
+chrono = "0.4"
 wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["console"] }
+dotenv = "0.15"
+implicit-clone = "0.5"
+indexmap = "1.9"

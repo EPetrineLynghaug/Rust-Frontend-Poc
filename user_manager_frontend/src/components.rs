@@ -1,10 +1,16 @@
-use crate::user_manager::{UserManager, UserState};
+// src/components.rs
+
 use chrono::NaiveDate;
+use std::env;
 use wasm_bindgen_futures::spawn_local;
+use web_sys::console;
 use yew::prelude::*;
+
+use crate::user_manager::{UserManager, UserState};
 
 #[function_component(App)]
 pub fn app() -> Html {
+    // Initialiserer brukerstate som Unauthorized
     let user_state = use_state(|| {
         UserManager::new(
             "TestUser".to_string(),
@@ -15,24 +21,23 @@ pub fn app() -> Html {
         )
     });
 
+    // Tilstand for inputfelt
     let email = use_state(|| "".to_string());
     let password = use_state(|| "".to_string());
     let error_message = use_state(|| "".to_string());
-    let weather_data = use_state(|| None);
 
+    // Callback for innlogging
     let on_login = {
         let user_state = user_state.clone();
         let email = email.clone();
         let password = password.clone();
         let error_message = error_message.clone();
-        let weather_data = weather_data.clone();
 
         Callback::from(move |_| {
             let email = email.clone();
             let password = password.clone();
             let user_state = user_state.clone();
             let error_message = error_message.clone();
-            let weather_data = weather_data.clone();
 
             spawn_local(async move {
                 if let UserState::Unauthorized(manager) = &*user_state {
@@ -41,20 +46,12 @@ pub fn app() -> Html {
                             user_state.set(new_state);
                             error_message.set("".to_string());
 
-                            if let UserState::Authorized(_) = &*user_state {
-                                match UserManager::fetch_weather(
-                                    "Oslo",
-                                    "fa94cfe79d4af2b4d631ec3ef0fd64ce",
-                                )
-                                .await
-                                {
-                                    Ok(data) => weather_data.set(Some(data)),
-                                    Err(err) => error_message.set(err),
-                                }
-                            }
+                            // Logg inn for debugging
+                            console::log_1(&"User logged in successfully!".into());
                         }
                         Err(err) => {
                             error_message.set(err);
+                            console::log_1(&format!("Login error: {}", err).into());
                         }
                     }
                 }
@@ -62,63 +59,69 @@ pub fn app() -> Html {
         })
     };
 
+    // Callback for utlogging
     let on_logout = {
         let user_state = user_state.clone();
-        let weather_data = weather_data.clone();
+        let error_message = error_message.clone();
 
         Callback::from(move |_| {
             if let UserState::Authorized(manager) = &*user_state {
                 user_state.set(manager.clone().logout());
-                weather_data.set(None);
+                error_message.set("".to_string());
+
+                // Logg ut for debugging
+                console::log_1(&"User logged out.".into());
             }
         })
     };
 
     html! {
-        <div>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
             {
                 match &*user_state {
                     UserState::Authorized(user) => html! {
                         <div>
                             <h1>{ format!("Velkommen, {}!", user.get_name()) }</h1>
-                            <button onclick={on_logout}>{ "Logg ut" }</button>
+                            <button onclick={on_logout} style="margin-bottom: 20px;">{ "Logg ut" }</button>
                             <div>
-                                <h2>{ "Værdata for Oslo:" }</h2>
-                                {
-                                    if let Some(weather) = &*weather_data {
-                                        html! {
-                                            <div>
-                                                <p>{ format!("By: {}", weather.name) }</p>
-                                                <p>{ format!("Temperatur: {}°C", weather.main.temp) }</p>
-                                                <p>{ format!("Vær: {}", weather.weather[0].description) }</p>
-                                            </div>
+                                <h2>{ "Du er innlogget." }</h2>
+                                <div>
+                                    {
+                                        if !(*error_message).is_empty() {
+                                            html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
+                                        } else {
+                                            html! {}
                                         }
-                                    } else {
-                                        html! { <p>{ "Henter værdata..." }</p> }
                                     }
-                                }
+                                </div>
                             </div>
                         </div>
                     },
                     UserState::Unauthorized(_) => html! {
                         <div>
                             <h1>{ "Logg inn" }</h1>
-                            <input
-                                type="email"
-                                placeholder="E-post"
-                                value={(*email).clone()}
-                                oninput={Callback::from(move |e: InputEvent| email.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                            />
-                            <input
-                                type="password"
-                                placeholder="Passord"
-                                value={(*password).clone()}
-                                oninput={Callback::from(move |e: InputEvent| password.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                            />
-                            <button onclick={on_login}>{ "Logg inn" }</button>
+                            <div style="margin-bottom: 10px;">
+                                <input
+                                    type="email"
+                                    placeholder="E-post"
+                                    value={(*email).clone()}
+                                    oninput={Callback::from(move |e: InputEvent| email.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
+                                    style="padding: 8px; width: 300px; margin-bottom: 10px;"
+                                />
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <input
+                                    type="password"
+                                    placeholder="Passord"
+                                    value={(*password).clone()}
+                                    oninput={Callback::from(move |e: InputEvent| password.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
+                                    style="padding: 8px; width: 300px;"
+                                />
+                            </div>
+                            <button onclick={on_login} style="padding: 10px 20px; font-size: 16px;">{ "Logg inn" }</button>
                             {
-                                if !error_message.is_empty() {
-                                    html! { <p style="color: red;">{ &*error_message }</p> }
+                                if !(*error_message).is_empty() {
+                                    html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
                                 } else {
                                     html! {}
                                 }
