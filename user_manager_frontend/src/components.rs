@@ -1,135 +1,129 @@
-// src/components.rs
-
 use chrono::NaiveDate;
-use std::env;
+use gloo_net::http::Request;
+use implicit_clone::unsync::IMap;
+use indexmap::map::IndexMap;
+use serde::Deserialize;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::console;
 use yew::prelude::*;
 
 use crate::user_manager::{UserManager, UserState};
 
+#[derive(Clone, PartialEq, Deserialize, Debug, implicit_clone::ImplicitClone)]
+pub struct Post {
+    userId: u32,
+    id: u32,
+    title: String,
+    body: String,
+}
+
+pub type PostMap = IMap<u32, Post>;
+
+async fn fetch_posts() -> Result<IndexMap<u32, Post>, String> {
+    let resp = Request::get("https://jsonplaceholder.typicode.com/posts?_limit=5")
+        .send()
+        .await
+        .map_err(|err| format!("Nettverksfeil: {err}"))?;
+
+    let posts_vec: Vec<Post> = resp
+        .json()
+        .await
+        .map_err(|err| format!("JSON parse error: {err}"))?;
+
+    let mut map = IndexMap::new();
+    for post in posts_vec {
+        map.insert(post.id, post);
+    }
+    Ok(map)
+}
+
 #[function_component(App)]
 pub fn app() -> Html {
-    // Initialiserer brukerstate som Unauthorized
+    // 1) Brukertilstand
     let user_state = use_state(|| {
-        UserManager::new(
-            "TestUser".to_string(),
-            "test@example.com".to_string(),
-            "password123".to_string(),
-            "Test Person".to_string(),
-            NaiveDate::from_ymd_opt(1990, 1, 1).unwrap(),
-        )
+        // Oppretter en "JohnDoe" i Unauthorized-tilstand
+        let bday = NaiveDate::from_ymd_opt(1990, 1, 1).expect("Invalid date");
+        UserManager::new("JohnDoe", "john@doe.com", "password123", "John Doe", bday)
     });
 
-    // Tilstand for inputfelt
-    let email = use_state(|| "".to_string());
-    let password = use_state(|| "".to_string());
-    let error_message = use_state(|| "".to_string());
+    // 2) Oppbevar poster i en IMap
+    let posts = use_state(PostMap::default);
 
-    // Callback for innlogging
+    // 3) on_login
     let on_login = {
         let user_state = user_state.clone();
-        let email = email.clone();
-        let password = password.clone();
-        let error_message = error_message.clone();
-
         Callback::from(move |_| {
-            let email = email.clone();
-            let password = password.clone();
-            let user_state = user_state.clone();
-            let error_message = error_message.clone();
+            if let UserState::Unauthorized(um) = &*user_state {
+                match um.login("john@doe.com", "password123") {
+                    Ok(new_state) => user_state.set(new_state),
+                    Err(err) => console::log_1(&format!("Login error: {err}").into()),
+                }
+            }
+        })
+    };
 
+    // 4) on_logout
+    let on_logout = {
+        let user_state = user_state.clone();
+        Callback::from(move |_| {
+            if let UserState::Authorized(um) = &*user_state {
+                user_state.set(um.logout());
+            }
+        })
+    };
+
+    // 5) on_fetch_posts
+    let on_fetch_posts = {
+        let posts = posts.clone();
+        Callback::from(move |_| {
             spawn_local(async move {
-                if let UserState::Unauthorized(manager) = &*user_state {
-                    match manager.clone().login(&email, &password) {
-                        Ok(new_state) => {
-                            user_state.set(new_state);
-                            error_message.set("".to_string());
-
-                            // Logg inn for debugging
-                            console::log_1(&"User logged in successfully!".into());
-                        }
-                        Err(err) => {
-                            error_message.set(err);
-                            console::log_1(&format!("Login error: {}", err).into());
-                        }
+                match fetch_posts().await {
+                    Ok(index_map) => {
+                        posts.set(PostMap::from(index_map));
                     }
+                    Err(e) => console::log_1(&format!("fetch_posts error: {e}").into()),
                 }
             });
         })
     };
 
-    // Callback for utlogging
-    let on_logout = {
-        let user_state = user_state.clone();
-        let error_message = error_message.clone();
-
-        Callback::from(move |_| {
-            if let UserState::Authorized(manager) = &*user_state {
-                user_state.set(manager.clone().logout());
-                error_message.set("".to_string());
-
-                // Logg ut for debugging
-                console::log_1(&"User logged out.".into());
-            }
-        })
-    };
-
+    // 6) HTML-rendering
     html! {
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <main>
+            <h1>{ "Rust Yew Eksempel – Innlogging & API" }</h1>
             {
                 match &*user_state {
-                    UserState::Authorized(user) => html! {
-                        <div>
-                            <h1>{ format!("Velkommen, {}!", user.get_name()) }</h1>
-                            <button onclick={on_logout} style="margin-bottom: 20px;">{ "Logg ut" }</button>
-                            <div>
-                                <h2>{ "Du er innlogget." }</h2>
-                                <div>
-                                    {
-                                        if !(*error_message).is_empty() {
-                                            html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
-                                        } else {
-                                            html! {}
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    },
                     UserState::Unauthorized(_) => html! {
-                        <div>
-                            <h1>{ "Logg inn" }</h1>
-                            <div style="margin-bottom: 10px;">
-                                <input
-                                    type="email"
-                                    placeholder="E-post"
-                                    value={(*email).clone()}
-                                    oninput={Callback::from(move |e: InputEvent| email.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                                    style="padding: 8px; width: 300px; margin-bottom: 10px;"
-                                />
-                            </div>
-                            <div style="margin-bottom: 10px;">
-                                <input
-                                    type="password"
-                                    placeholder="Passord"
-                                    value={(*password).clone()}
-                                    oninput={Callback::from(move |e: InputEvent| password.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                                    style="padding: 8px; width: 300px;"
-                                />
-                            </div>
-                            <button onclick={on_login} style="padding: 10px 20px; font-size: 16px;">{ "Logg inn" }</button>
-                            {
-                                if !(*error_message).is_empty() {
-                                    html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
-                                } else {
-                                    html! {}
-                                }
-                            }
-                        </div>
+                        <>
+                            <p>{ "Du er ikke logget inn." }</p>
+                            <button onclick={on_login}>{ "Logg inn" }</button>
+                        </>
+                    },
+                    UserState::Authorized(user) => html! {
+                        <>
+                            <p>{ format!("Hei, {}!", user.get_name()) }</p>
+                            <button onclick={on_logout}>{ "Logg ut" }</button>
+                            <button onclick={on_fetch_posts}>{ "Hent poster" }</button>
+                        </>
+                    },
+                }
+            }
+            {
+                if posts.is_empty() {
+                    html! { <p>{ "Ingen poster. Klikk \"Hent poster\"." }</p> }
+                } else {
+                    html! {
+                        <ul>
+                            { for posts.iter().map(|(id, post)| html! {
+                                <li key={(*id).to_string()}>
+                                    <strong>{ format!("Post #{}: {}", post.id, post.title) }</strong>
+                                    <p>{ &post.body }</p>
+                                </li>
+                            }) }
+                        </ul>
                     }
                 }
             }
-        </div>
+        </main>
     }
 }

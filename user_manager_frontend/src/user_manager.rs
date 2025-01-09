@@ -1,27 +1,23 @@
-// src/user_manager.rs
-
 use chrono::NaiveDate;
-use implicit_clone::ImplicitClone;
 use sha2::{Digest, Sha256};
 use std::marker::PhantomData;
-use web_sys::console; // For logging
+use web_sys::console;
 
-/// Enum representing the state of a user.
+/// Representerer brukertilstanden: Ulogget eller Innlogget.
 #[derive(Clone)]
 pub enum UserState {
     Unauthorized(UserManager<Unauthorized>),
     Authorized(UserManager<Authorized>),
 }
 
-/// Struct representing an authorized user.
-#[derive(Clone)]
-pub struct Authorized;
-
-/// Struct representing an unauthorized user.
+/// Skilletyper for unauthorized/authorized.
 #[derive(Clone)]
 pub struct Unauthorized;
 
-/// Generic struct for managing user data, parameterized by state.
+#[derive(Clone)]
+pub struct Authorized;
+
+/// Struktur for brukerhåndtering.
 #[derive(Clone)]
 pub struct UserManager<State = Unauthorized> {
     state: PhantomData<State>,
@@ -32,56 +28,63 @@ pub struct UserManager<State = Unauthorized> {
     birthday: NaiveDate,
 }
 
-impl UserManager<Authorized> {
-    /// Get the user's name.
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    /// Logout the user, transitioning to Unauthorized state.
-    pub fn logout(self) -> UserState {
-        UserState::Unauthorized(UserManager {
-            state: PhantomData,
-            username: self.username,
-            email: self.email,
-            password_hash: self.password_hash,
-            name: self.name,
-            birthday: self.birthday,
-        })
-    }
-}
-
 impl UserManager<Unauthorized> {
-    /// Login the user with email and password.
-    pub fn login(self, email: &str, password: &str) -> Result<UserState, String> {
-        if email != self.email || UserManager::hash_password(password) != self.password_hash {
+    /// `login(&self, ...)` – tar en referanse.
+    /// Lager en `Authorized`-tilstand ved å klone feltene hvis passordet stemmer.
+    pub fn login(&self, email: &str, password: &str) -> Result<UserState, String> {
+        if email != self.email || Self::hash_password(password) != self.password_hash {
             console::log_1(&"Login failed: Invalid email or password.".into());
             Err("Feil e-post eller passord".to_string())
         } else {
             console::log_1(&"Login succeeded.".into());
             Ok(UserState::Authorized(UserManager {
                 state: PhantomData,
-                username: self.username,
-                email: self.email,
-                password_hash: self.password_hash,
-                name: self.name,
+                username: self.username.clone(),
+                email: self.email.clone(),
+                password_hash: self.password_hash.clone(),
+                name: self.name.clone(),
                 birthday: self.birthday,
             }))
         }
     }
 }
 
+impl UserManager<Authorized> {
+    /// Hent brukernavnet
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    /// `logout(&self)` – tar en referanse.
+    /// Lager en `Unauthorized` ved å klone datafeltene.
+    pub fn logout(&self) -> UserState {
+        console::log_1(&"Logout succeeded.".into());
+        UserState::Unauthorized(UserManager {
+            state: PhantomData,
+            username: self.username.clone(),
+            email: self.email.clone(),
+            password_hash: self.password_hash.clone(),
+            name: self.name.clone(),
+            birthday: self.birthday,
+        })
+    }
+}
+
 impl UserManager {
-    /// Create a new UserManager instance, initially in Unauthorized state.
+    /// Oppretter en ny bruker i Unauthorized state.
     pub fn new(
-        username: String,
-        email: String,
-        password: String,
-        name: String,
+        username: impl Into<String>,
+        email: impl Into<String>,
+        password: impl AsRef<str>,
+        name: impl Into<String>,
         birthday: NaiveDate,
     ) -> UserState {
-        let password_hash = Self::hash_password(&password);
+        let username = username.into();
+        let email = email.into();
+        let name = name.into();
+        let password_hash = Self::hash_password(password.as_ref());
         console::log_1(&"Created new UserManager in Unauthorized state.".into());
+
         UserState::Unauthorized(UserManager {
             state: PhantomData,
             username,
@@ -92,7 +95,7 @@ impl UserManager {
         })
     }
 
-    /// Hash a password using SHA256.
+    /// Enkel SHA256-hashing.
     fn hash_password(password: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(password);

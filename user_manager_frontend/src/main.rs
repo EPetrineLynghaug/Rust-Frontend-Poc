@@ -1,12 +1,14 @@
-use crate::components::App;
-use dotenv::dotenv;
-use yew::Renderer;
-
 mod components;
 mod user_manager;
 
+use components::App;
+use yew::Renderer;
+
+/// Hovedfunksjonen som starter Yew-applikasjonen.
+/// Rendrer `App`-komponenten definert i `components.rs`.
 fn main() {
-    // Last inn miljøvariabler fra .env-filen
-    dotenv().ok();
+    // Hvis du ønsker logging i nettleserkonsollen, fjern kommentaren:
+    // wasm_logger::init(wasm_logger::Config::default());
+
     Renderer::<App>::new().render();
 }
