@@ -170,12 +170,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
-
-[[package]]
 name = "equivalent"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,7 +467,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "gloo-utils 0.1.7",
- "http",
+ "http 0.2.12",
  "js-sys",
  "pin-project",
  "serde",
@@ -494,7 +488,28 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "gloo-utils 0.2.0",
- "http",
+ "http 0.2.12",
+ "js-sys",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "gloo-net"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c06f627b1a58ca3d42b45d6104bf1e1a03799df472df00988b6ba21accc10580"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-sink",
+ "gloo-utils 0.2.0",
+ "http 1.2.0",
  "js-sys",
  "pin-project",
  "serde",
@@ -673,6 +688,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "http"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f16ca2af56261c99fba8bac40a10251ce8188205a4c448fbb745a2e4daa76fea"
+dependencies = [
+ "bytes",
+ "fnv",
+ "itoa",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -712,6 +738,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1bd41bf647018e1da0e32dac34d02135d61d7204cee650e4633eddbd0b23ec38"
 dependencies = [
  "implicit-clone-derive",
+ "indexmap",
 ]
 
 [[package]]
@@ -940,21 +967,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_typing_poc"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dotenv",
- "implicit-clone 0.5.0",
- "indexmap",
- "serde",
- "sha2",
- "wasm-bindgen-futures",
- "web-sys",
- "yew",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1107,9 +1119,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.42.0"
+version = "1.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cec9b21b0450273377fc97bd4c33a8acffc8c996c987a7c5b319a0083707551"
+checksum = "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
 dependencies = [
  "backtrace",
  "pin-project-lite",
@@ -1395,4 +1407,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.95",
+]
+
+[[package]]
+name = "yew_user_example"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "gloo-net 0.6.0",
+ "implicit-clone 0.5.0",
+ "indexmap",
+ "serde",
+ "sha2",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "yew",
 ]

@@ -1,5 +1,3 @@
-// src/user_manager.rs
-
 use chrono::NaiveDate;
 
 use sha2::{Digest, Sha256};

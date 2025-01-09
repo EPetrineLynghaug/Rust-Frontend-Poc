@@ -1,15 +1,25 @@
 [package]
-name = "rust_typing_poc"
+name = "yew_user_example"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
+# For å bruke Renderer::<App>::new().render(), trenger vi feature "csr"
 yew = { version = "0.21.0", features = ["csr"] }
-serde = { version = "1.0", features = ["derive"] }
-sha2 = "0.10"
-chrono = "0.4"
+
+# For å kunne kalle spawn_local, trenger vi wasm-bindgen-futures
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["console"] }
-dotenv = "0.15"
-implicit-clone = "0.5"
-indexmap = "2.7"
+
+# For indexmap-baserte datastrukturer som IMap
+# Må ha feature ["indexmap"] på implicit-clone for å få tilgang til `IMap`.
+indexmap = "2.7.0"
+implicit-clone = { version = "0.5.0", features = ["indexmap"] }
+
+# Ellers som før
+chrono = "0.4"
+sha2 = "0.10"
+web-sys = "0.3"
+wasm-bindgen = "0.2"
+gloo-net = "0.6.0"
+serde = { version = "1.0", features = ["derive"] }
