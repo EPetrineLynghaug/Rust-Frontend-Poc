@@ -1,7 +1,7 @@
 // src/user_manager.rs
 
 use chrono::NaiveDate;
-use implicit_clone::ImplicitClone;
+
 use sha2::{Digest, Sha256};
 use std::marker::PhantomData;
 use web_sys::console; // For logging

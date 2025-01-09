@@ -1,7 +1,7 @@
 // src/components.rs
 
 use chrono::NaiveDate;
-use std::env;
+
 use wasm_bindgen_futures::spawn_local;
 use web_sys::console;
 use yew::prelude::*;
@@ -10,7 +10,6 @@ use crate::user_manager::{UserManager, UserState};
 
 #[function_component(App)]
 pub fn app() -> Html {
-    // Initialiserer brukerstate som Unauthorized
     let user_state = use_state(|| {
         UserManager::new(
             "TestUser".to_string(),
@@ -21,12 +20,10 @@ pub fn app() -> Html {
         )
     });
 
-    // Tilstand for inputfelt
     let email = use_state(|| "".to_string());
     let password = use_state(|| "".to_string());
     let error_message = use_state(|| "".to_string());
 
-    // Callback for innlogging
     let on_login = {
         let user_state = user_state.clone();
         let email = email.clone();
@@ -45,12 +42,10 @@ pub fn app() -> Html {
                         Ok(new_state) => {
                             user_state.set(new_state);
                             error_message.set("".to_string());
-
-                            // Logg inn for debugging
                             console::log_1(&"User logged in successfully!".into());
                         }
                         Err(err) => {
-                            error_message.set(err);
+                            error_message.set(err.clone());
                             console::log_1(&format!("Login error: {}", err).into());
                         }
                     }
@@ -59,7 +54,6 @@ pub fn app() -> Html {
         })
     };
 
-    // Callback for utlogging
     let on_logout = {
         let user_state = user_state.clone();
         let error_message = error_message.clone();
@@ -68,8 +62,6 @@ pub fn app() -> Html {
             if let UserState::Authorized(manager) = &*user_state {
                 user_state.set(manager.clone().logout());
                 error_message.set("".to_string());
-
-                // Logg ut for debugging
                 console::log_1(&"User logged out.".into());
             }
         })
@@ -81,51 +73,43 @@ pub fn app() -> Html {
                 match &*user_state {
                     UserState::Authorized(user) => html! {
                         <div>
-                            <h1>{ format!("Velkommen, {}!", user.get_name()) }</h1>
-                            <button onclick={on_logout} style="margin-bottom: 20px;">{ "Logg ut" }</button>
-                            <div>
-                                <h2>{ "Du er innlogget." }</h2>
-                                <div>
-                                    {
-                                        if !(*error_message).is_empty() {
-                                            html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
-                                        } else {
-                                            html! {}
-                                        }
-                                    }
-                                </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h1>{ format!("Velkommen, {}!", user.get_name()) }</h1>
+                                <button onclick={on_logout} style="padding: 8px 16px; background-color: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Logg ut" }</button>
+                            </div>
+                            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                <h2>{ "Din Dashboard" }</h2>
+                                <p>{ "Her kan du bygge ut applikasjonen videre med flere funksjoner." }</p>
                             </div>
                         </div>
                     },
                     UserState::Unauthorized(_) => html! {
-                        <div>
-                            <h1>{ "Logg inn" }</h1>
-                            <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5f5;">
+                            <div style="text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                <h1 style="margin-bottom: 20px;">{ "Logg inn" }</h1>
                                 <input
                                     type="email"
                                     placeholder="E-post"
                                     value={(*email).clone()}
                                     oninput={Callback::from(move |e: InputEvent| email.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                                    style="padding: 8px; width: 300px; margin-bottom: 10px;"
+                                    style="padding: 8px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;"
                                 />
-                            </div>
-                            <div style="margin-bottom: 10px;">
                                 <input
                                     type="password"
                                     placeholder="Passord"
                                     value={(*password).clone()}
                                     oninput={Callback::from(move |e: InputEvent| password.set(e.target_unchecked_into::<web_sys::HtmlInputElement>().value()))}
-                                    style="padding: 8px; width: 300px;"
+                                    style="padding: 8px; width: 100%; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;"
                                 />
-                            </div>
-                            <button onclick={on_login} style="padding: 10px 20px; font-size: 16px;">{ "Logg inn" }</button>
-                            {
-                                if !(*error_message).is_empty() {
-                                    html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
-                                } else {
-                                    html! {}
+                                <button onclick={on_login} style="padding: 10px 20px; font-size: 16px; background-color: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Logg inn" }</button>
+                                {
+                                    if !(*error_message).is_empty() {
+                                        html! { <p style="color: red; margin-top: 10px;">{ &*error_message }</p> }
+                                    } else {
+                                        html! {}
+                                    }
                                 }
-                            }
+                            </div>
                         </div>
                     }
                 }
