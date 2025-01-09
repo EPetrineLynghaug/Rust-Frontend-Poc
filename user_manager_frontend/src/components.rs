@@ -54,6 +54,25 @@ pub fn app() -> Html {
         })
     };
 
+    let sanity = {
+        Callback::from(move |_| {
+            // console::log_1(&"Sanity check".into());
+
+            wasm_bindgen_futures::spawn_local(async move {
+                let res = reqwest::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*%5B_type+%3D%3D+%22post%22%5D%5B0...3%5D%7B%0A++slug%2C%0A++title%2C%0A++%22logoUrl%22%3A+logo.asset-%3Eurl%0A%7D")
+                    .await
+                    .unwrap()
+                    .text()
+                    .await
+                    .unwrap();
+
+                // assert_eq!(res.status(), 200);
+
+                console::log_1(&res.into());
+            });
+        })
+    };
+
     let on_logout = {
         let user_state = user_state.clone();
         let error_message = error_message.clone();
@@ -76,6 +95,7 @@ pub fn app() -> Html {
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h1>{ format!("Velkommen, {}!", user.get_name()) }</h1>
                                 <button onclick={on_logout} style="padding: 8px 16px; background-color: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Logg ut" }</button>
+                                <button onclick={sanity} style="padding: 8px 16px; background-color: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Sanity" }</button>
                             </div>
                             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                                 <h2>{ "Din Dashboard" }</h2>
