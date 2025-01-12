@@ -25,15 +25,15 @@ struct ApiResponse {
     result: Vec<BlogPost>, // Blog posts are stored in "result"
 }
 
-#[function_component(App)]
-pub fn app() -> Html {
+#[function_component]
+pub fn App() -> Html {
     let user_state = use_state(|| {
         UserManager::new(
             "TestUser".to_string(),
             "test@example.com".to_string(),
             "password123".to_string(),
             "Test Person".to_string(),
-            NaiveDate::from_ymd_opt(1990, 1, 1).unwrap(),
+            NaiveDate::from_ymd_opt(1990, 1, 1).expect("Couldn't parse naive date"),
         )
     });
 
@@ -43,35 +43,28 @@ pub fn app() -> Html {
     let blog_posts = use_state(|| Vec::<BlogPost>::new()); // State for blog posts
 
     // Automatically fetch blog posts on component load
-    {
-        let blog_posts = blog_posts.clone();
+    let blog_posts_clone = blog_posts.clone();
+    spawn_local(async move {
+        let res = reqwest::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
+            .await;
 
-        use_effect(move || {
-            spawn_local(async move {
-                let res = reqwest::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
-                    .await;
-
-                match res {
-                    Ok(response) => {
-                        let text = response.text().await.unwrap();
-                        match serde_json::from_str::<ApiResponse>(&text) {
-                            Ok(parsed_response) => {
-                                blog_posts.set(parsed_response.result); // Update blog posts
-                            }
-                            Err(err) => {
-                                console::log_1(&format!("Parsing error: {}", err).into());
-                            }
-                        }
+        match res {
+            Ok(response) => {
+                let text = response.text().await.expect("Badly formatted API response");
+                match serde_json::from_str::<ApiResponse>(&text) {
+                    Ok(parsed_response) => {
+                        blog_posts_clone.set(parsed_response.result); // Update blog posts
                     }
                     Err(err) => {
-                        console::log_1(&format!("Fetch error: {}", err).into());
+                        console::log_1(&format!("Parsing error: {}", err).into());
                     }
                 }
-            });
-
-            || ()
-        });
-    }
+            }
+            Err(err) => {
+                console::log_1(&format!("Fetch error: {}", err).into());
+            }
+        }
+    });
 
     let on_login = {
         let user_state = user_state.clone();
