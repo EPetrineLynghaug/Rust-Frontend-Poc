@@ -4,26 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
 # For å bruke Renderer::<App>::new().render(), trenger vi feature "csr"
 yew = { version = "0.21.0", features = ["csr"] }
 
 # For å kunne kalle spawn_local, trenger vi wasm-bindgen-futures
 wasm-bindgen-futures = "0.4"
 
-# For indexmap-baserte datastrukturer som IMap
-# Må ha feature ["indexmap"] på implicit-clone for å få tilgang til `IMap`.
-indexmap = "2.7.0"
-implicit-clone = { version = "0.5.0", features = ["indexmap"] }
-
 # Ellers som før
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
-web-sys = "0.3"
-wasm-bindgen = "0.2"
-gloo-net = "0.6.0"
 serde = { version = "1.0", features = ["derive"] }
-
-
 serde_json = "1.0"
 reqwest = "0.12.12"
+gloo-console = "0.3.0"
+yew-router = "0.18.0"
+web-sys = "0.3.76"
+gloo-storage = "0.3.0"

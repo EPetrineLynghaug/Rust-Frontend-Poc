@@ -1,0 +1,10 @@
+{
+  "liveshare.languages.allowGuestCommandControl": true,
+  // Yew
+  "emmet.includeLanguages": {
+    "rust": "html css"
+  },
+  "tailwindCSS.includeLanguages": {
+    "rust": "html"
+  }
+}

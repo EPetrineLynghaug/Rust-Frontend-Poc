@@ -1,12 +1,10 @@
-use crate::components::App;
+use crate::app::App;
 
-use yew::Renderer;
-
+mod app;
 mod components;
-mod user_manager;
+mod helpers;
+mod pages;
 
 fn main() {
-    // Last inn miljøvariabler fra .env-filen
-
-    Renderer::<App>::new().render();
+    yew::Renderer::<App>::new().render();
 }
