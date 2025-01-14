@@ -70,7 +70,7 @@ pub fn HomePage() -> Html {
             let blog_posts = blog_posts.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
-                let fetched_posts = Request::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
+                let fetched_posts = Request::get("https://1fuw6fjt.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
                     .send()
                     .await
                     .unwrap()
