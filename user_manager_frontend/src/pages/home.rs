@@ -1,11 +1,16 @@
 use gloo_console::log;
+use gloo_net::http::Request;
 use gloo_storage::{LocalStorage, Storage};
 use serde::Deserialize;
-use wasm_bindgen_futures::spawn_local;
-use yew::{function_component, html, use_state, Callback, Html};
+use yew::{function_component, html, use_effect_with, use_state, Callback, Html};
 use yew_router::prelude::*;
 
 use crate::{app::Route, helpers::user_manager::UserState};
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+struct BlogPostsRequest {
+    result: Vec<BlogPost>,
+}
 
 // Model for blog posts
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -58,28 +63,26 @@ pub fn HomePage() -> Html {
     let blog_posts = use_state(|| Vec::<BlogPost>::new()); // State for blog posts
 
     // Automatically fetch blog posts on component load
-    let blog_posts_clone = blog_posts.clone();
-    spawn_local(async move {
-        let res = reqwest::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
-            .await;
+    {
+        let blog_posts = blog_posts.clone();
 
-        match res {
-            Ok(response) => {
-                let text = response.text().await.expect("Badly formatted API response");
-                match serde_json::from_str::<ApiResponse>(&text) {
-                    Ok(parsed_response) => {
-                        blog_posts_clone.set(parsed_response.result); // Update blog posts
-                    }
-                    Err(err) => {
-                        log!(format!("Parsing error: {}", err));
-                    }
-                }
-            }
-            Err(err) => {
-                log!(&format!("Fetch error: {}", err));
-            }
-        }
-    });
+        use_effect_with((), move |_| {
+            let blog_posts = blog_posts.clone();
+
+            wasm_bindgen_futures::spawn_local(async move {
+                let fetched_posts = Request::get("https://skby54ey.api.sanity.io/v2022-03-07/data/query/production?query=*[_type == \"post\"][0...3]{slug,title,\"logoUrl\":logo.asset->url}")
+                    .send()
+                    .await
+                    .unwrap()
+                    .json::<BlogPostsRequest>()
+                    .await
+                    .unwrap();
+
+                blog_posts.set(fetched_posts.result);
+            });
+            || ()
+        });
+    }
 
     let on_logout = {
         let user_state = user_state.clone();
