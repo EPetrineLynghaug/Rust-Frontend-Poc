@@ -104,7 +104,10 @@ pub fn HomePage() -> Html {
                 <button onclick={on_logout} style="padding: 10px 20px; background-color: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Log out" }</button>
             </div>
             <div>
+
                 <h2 style="font-size: 1.8rem; color: #333; margin-bottom: 20px;">{ "The Rust Blog" }</h2>
+
+
                 <ul style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; list-style: none; padding: 0; margin: 0;">
                     {
                         for blog_posts.iter().map(|post| html! {

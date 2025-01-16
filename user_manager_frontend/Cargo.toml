@@ -20,3 +20,8 @@ yew-router = "0.18.0"
 web-sys = "0.3.76"
 gloo-storage = "0.3.0"
 gloo-net = "0.6"
+
+[[hooks]]
+stage = "pre_build"
+command = "tailwindcss"
+command_arguments = ["-i", "input.css", "-o", "app.css"]

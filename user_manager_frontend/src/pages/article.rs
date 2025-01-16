@@ -123,11 +123,12 @@ pub fn ArticlePage(props: &ArticlePageProps) -> Html {
 
                     html! {
                         <>
-                            <h1>{ content.title.clone() }</h1>
+                            <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 10px;">{ content.title.clone() }</h1>
 
                             <img src={content.logo.asset.url.clone()} />
-
-                            { article_to_html(&content) }
+                            <div style="line-height: 1.8; color: #444;">
+                            { article_to_html (&content) }
+                            </div>
                         </>
                     }
                 } else {
