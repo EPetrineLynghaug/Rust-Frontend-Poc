@@ -123,7 +123,7 @@ pub fn ArticlePage(props: &ArticlePageProps) -> Html {
 
                     html! {
                         <>
-                            <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 10px;">{ content.title.clone() }</h1>
+                            <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 10px;" class="bg-blue-900">{ content.title.clone() }</h1>
 
                             <img src={content.logo.asset.url.clone()} />
                             <div style="line-height: 1.8; color: #444;">
