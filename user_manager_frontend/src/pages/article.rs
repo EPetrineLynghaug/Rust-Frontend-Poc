@@ -69,7 +69,8 @@ fn article_to_html(article: &Article) -> Html {
                     "block" => html! {
                         {
                             for b.children.clone().unwrap_or(vec![]).iter().map(|c| match c.content_type.as_str() {
-                                "span" => html! { <p>{ c.text.clone() }</p> },
+                                "span" => html! { <p class="mb-4 text-gray-700">{ c.text.clone() }</p> },
+
                                 _ => html! {}
                             })
                         }
@@ -118,21 +119,28 @@ pub fn ArticlePage(props: &ArticlePageProps) -> Html {
     html! {
         <>
             {
-                if content.is_some() {
-                    let content = <std::option::Option<Article> as Clone>::clone(&content).unwrap();
-
+                if let Some(content) = (*content).clone() {
                     html! {
-                        <>
-                            <h1 style="font-size: 2.5rem; color: #333; margin-bottom: 10px;" class="bg-blue-900">{ content.title.clone() }</h1>
-
-                            <img src={content.logo.asset.url.clone()} />
-                            <div style="line-height: 1.8; color: #444;">
-                            { article_to_html (&content) }
+                        <div class="container mx-auto max-w-4xl px-4 py-8 bg-white shadow-md rounded-lg">
+                            <div class="flex flex-col sm:flex-row items-center gap-4 mb-6 border-b border-gray-200 pb-4">
+                                <img
+                                    class="w-16 h-16 sm:w-24 sm:h-24 rounded shadow-md"
+                                    src={content.logo.asset.url.clone()}
+                                    alt="Logo"
+                                    loading="lazy"
+                                />
+                                <h1 class="text-3xl md:text-4xl lg:text-5xl text-gray-800 font-bold">
+                                    { content.title.clone().unwrap_or_else(|| "Uten tittel".to_string()) }
+                                </h1>
                             </div>
-                        </>
+
+                            <div class="prose prose-lg text-gray-700 leading-relaxed max-w-none">
+                                { article_to_html(&content) }
+                            </div>
+                        </div>
                     }
                 } else {
-                    html! {}
+                    html! { <p class="text-center text-gray-600">{"Loading..."}</p> }
                 }
             }
         </>
