@@ -2,7 +2,7 @@ use gloo_console::log;
 use gloo_net::http::Request;
 use serde::Deserialize;
 use yew::{function_component, html, use_effect_with, use_state, Callback, Html, Properties};
-use yew_router::prelude::*; // <-- Viktig for navigator/back
+use yew_router::prelude::*;
 
 #[derive(PartialEq, Properties)]
 pub struct ArticlePageProps {

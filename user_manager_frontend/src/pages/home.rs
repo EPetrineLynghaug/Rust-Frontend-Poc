@@ -101,6 +101,15 @@ pub fn HomePage() -> Html {
 
     html! {
         <div class="max-w-[1200px] mx-auto p-4 box-border">
+       <section class="relative bg-cover bg-center h-64 rounded-lg mb-8" style="background-image: url('https://via.placeholder.com/1200x400');">
+        <div class="absolute inset-0 bg-gray-900 bg-opacity-50 rounded-lg"></div>
+        <div class="relative flex items-center justify-center h-full">
+            <div class="text-center">
+                <h2 class="text-4xl text-white font-bold mb-2">{ "Welcome to the Rust Blog" }</h2>
+                <p class="text-lg text-gray-300">{ "Explore the latest posts on Rust programming and more!" }</p>
+            </div>
+        </div>
+    </section>
 
             <div class="flex flex-wrap justify-between items-center mb-5">
                 <h1 class="text-[clamp(1.5rem,5vw,2.5rem)] text-gray-900 font-bold m-0">
@@ -119,7 +128,7 @@ pub fn HomePage() -> Html {
 
             <div>
                 <h2 class="text-[clamp(1.2rem,4vw,1.8rem)] text-gray-800 font-semibold mb-5 mt-0">
-                    { "The Rust Blog" }
+                    { "Latest Posts" }
                 </h2>
 
 
@@ -144,7 +153,7 @@ pub fn HomePage() -> Html {
                                         ease-in-out
                                         cursor-pointer
                                         hover:shadow-xl
-                                        hover:scale-[1.03]
+                                     
                                     "
                                 >
                                     {
