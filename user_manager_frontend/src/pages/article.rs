@@ -1,7 +1,8 @@
 use gloo_console::log;
 use gloo_net::http::Request;
 use serde::Deserialize;
-use yew::{function_component, html, use_effect_with, use_state, Html, Properties};
+use yew::{function_component, html, use_effect_with, use_state, Callback, Html, Properties};
+use yew_router::prelude::*; // <-- Viktig for navigator/back
 
 #[derive(PartialEq, Properties)]
 pub struct ArticlePageProps {
@@ -70,7 +71,6 @@ fn article_to_html(article: &Article) -> Html {
                         {
                             for b.children.clone().unwrap_or(vec![]).iter().map(|c| match c.content_type.as_str() {
                                 "span" => html! { <p class="mb-4 text-gray-700">{ c.text.clone() }</p> },
-
                                 _ => html! {}
                             })
                         }
@@ -85,6 +85,17 @@ fn article_to_html(article: &Article) -> Html {
 #[function_component]
 pub fn ArticlePage(props: &ArticlePageProps) -> Html {
     let ArticlePageProps { slug } = props;
+
+    // Opprett en navigator for å kunne gå "tilbake".
+    let navigator = use_navigator().expect("No navigator found!");
+
+    // Definer 'go_back'-callback som kaller navigator.back().
+    let go_back = {
+        let navigator = navigator.clone();
+        Callback::from(move |_| {
+            navigator.back();
+        })
+    };
 
     let content = use_state(|| None);
     {
@@ -133,6 +144,25 @@ pub fn ArticlePage(props: &ArticlePageProps) -> Html {
                                     { content.title.clone().unwrap_or_else(|| "Uten tittel".to_string()) }
                                 </h1>
                             </div>
+
+                            // Her bruker vi go_back-knappen
+                            <button
+                                onclick={go_back}
+                                class="
+                                    inline-block
+                                    mb-4
+                                    px-4
+                                    py-2
+                                    bg-gray-200
+                                    text-gray-700
+                                    rounded-md
+                                    shadow
+                                    hover:bg-gray-300
+                                    transition-colors
+                                "
+                            >
+                                { "← Go Back" }
+                            </button>
 
                             <div class="prose prose-lg text-gray-700 leading-relaxed max-w-none">
                                 { article_to_html(&content) }

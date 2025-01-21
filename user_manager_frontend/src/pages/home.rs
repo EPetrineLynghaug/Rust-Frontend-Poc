@@ -60,9 +60,8 @@ pub fn HomePage() -> Html {
     };
 
     let error_message = use_state(|| "".to_string());
-    let blog_posts = use_state(|| Vec::<BlogPost>::new()); // State for blog posts
+    let blog_posts = use_state(|| Vec::<BlogPost>::new());
 
-    // Automatically fetch blog posts on component load
     {
         let blog_posts = blog_posts.clone();
 
@@ -87,47 +86,105 @@ pub fn HomePage() -> Html {
     let on_logout = {
         let user_state = user_state.clone();
         let error_message = error_message.clone();
+        let navigator = navigator.clone();
 
         Callback::from(move |_| {
             if let UserState::Authorized(manager) = &*user_state {
                 user_state.set(manager.clone().logout());
                 error_message.set("".to_string());
                 log!("User logged out.");
+
+                navigator.replace(&Route::Login);
             }
         })
     };
 
     html! {
-        <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1 style="font-size: 2.5rem; color: #333;">{ format!("Welcome, {}!", user.get_name()) }</h1>
-                <button onclick={on_logout} style="padding: 10px 20px; background-color: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer;">{ "Log out" }</button>
+        <div class="max-w-[1200px] mx-auto p-4 box-border">
+
+            <div class="flex flex-wrap justify-between items-center mb-5">
+                <h1 class="text-[clamp(1.5rem,5vw,2.5rem)] text-gray-900 font-bold m-0">
+                    { format!("Welcome, {}!", user.get_name()) }
+                </h1>
+                <button
+                    onclick={on_logout}
+                    class="px-6 py-3 bg-[#d9534f] text-white font-semibold rounded-lg cursor-pointer
+                           transition-all duration-300
+                           hover:bg-[#c9302c] hover:shadow-md"
+                >
+                    { "Log out" }
+                </button>
             </div>
+
+
             <div>
+                <h2 class="text-[clamp(1.2rem,4vw,1.8rem)] text-gray-800 font-semibold mb-5 mt-0">
+                    { "The Rust Blog" }
+                </h2>
 
-                <h2 style="font-size: 1.8rem; color: #333; margin-bottom: 20px;">{ "The Rust Blog" }</h2>
 
-
-                <ul style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; list-style: none; padding: 0; margin: 0;">
+                <ul class="
+                    grid grid-cols-[repeat(auto-fill,_minmax(300px,_1fr))]
+                    gap-6
+                    list-none
+                    p-0
+                    m-0
+                ">
                     {
-                        for blog_posts.iter().map(|post| html! {
-                            <li style="
-                                background: white;
-                                padding: 20px;
-                                border-radius: 8px;
-                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                                transition: transform 0.3s ease, box-shadow 0.3s ease;
-                                cursor: pointer;">
-                                {
-                                    if let Some(url) = &post.logo_url {
-                                        html! { <img src={url.clone()} alt="Blog image" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 16px;" /> }
-                                    } else {
-                                        html! {}
+                        for blog_posts.iter().map(|post| {
+                            html! {
+                                <li
+                                    class="
+                                        bg-white
+                                        p-6
+                                        rounded-xl
+                                        shadow-lg
+                                        transition-transform
+                                        duration-300
+                                        ease-in-out
+                                        cursor-pointer
+                                        hover:shadow-xl
+                                        hover:scale-[1.03]
+                                    "
+                                >
+                                    {
+                                        if let Some(url) = &post.logo_url {
+                                            html! {
+                                                <img
+                                                    src={url.clone()}
+                                                    alt="Blog image"
+                                                    class="w-full h-auto rounded-xl mb-4"
+                                                />
+                                            }
+                                        } else {
+                                            html! {}
+                                        }
                                     }
-                                }
-                                <h3 style="font-size: 1.5rem; color: #333; margin-bottom: 10px;">{ &post.title }</h3>
-                                <Link<Route> to={Route::Article { slug: post.slug.current.clone() }}>{ "Read More" }</Link<Route>>
-                            </li>
+                                    <h3 class="text-lg text-gray-900 font-bold mb-3 mt-0">
+                                        { &post.title }
+                                    </h3>
+                                    <Link<Route>
+                                    to={Route::Article { slug: post.slug.current.clone() }}
+                                    classes="
+                                        inline-block
+                                        px-4
+                                        py-2
+                                        bg-blue-500
+                                        text-white
+                                        text-sm
+                                        font-medium
+                                        rounded-md
+                                        shadow-sm
+                                        hover:bg-blue-600
+                                        transition-colors
+                                    "
+                                >
+                                    { "Read More" }
+                                </Link<Route>>
+
+
+                                </li>
+                            }
                         })
                     }
                 </ul>
