@@ -59,7 +59,7 @@ impl UserManager<Unauthorized> {
     pub fn login(self, email: &str, password: &str) -> Result<UserState, String> {
         if email != self.email || UserManager::hash_password(password) != self.password_hash {
             log!("Login failed: Invalid email or password.");
-            Err("Feil e-post eller passord".to_string())
+            Err("Login failed: Invalid email or password.".to_string())
         } else {
             log!("Login succeeded.");
 
