@@ -1,10 +1,21 @@
+// This line imports the `NaiveDate` type from the `chrono` library.
+// `NaiveDate` is used to work with dates without any time or timezone information.
 use chrono::NaiveDate;
+// These imports provide logging (`log` and `error`) and local storage functionality (`LocalStorage`).
 use gloo_console::{error, log};
 use gloo_storage::{LocalStorage, Storage};
+
+// This import allows us to interact with the <input> elements in the browser.
 use web_sys::HtmlInputElement;
+
+// These imports are core parts of the Yew framework. They let us create components, manage state, and handle events.
 use yew::{function_component, html, use_state, Callback, Html, InputEvent, TargetCast};
+
+// This import allows us to navigate between different pages or routes in a Yew application.
 use yew_router::hooks::use_navigator;
 
+// Here we import the `Route` enum (or struct) that defines different pages in our app,
+// and also the `UserManager` and `UserState` which handle user-related logic such as logging in.
 use crate::{
     app::Route,
     helpers::user_manager::{UserManager, UserState},
@@ -12,13 +23,18 @@ use crate::{
 
 #[function_component]
 pub fn LoginPage() -> Html {
+    // `use_navigator` gives us a way to navigate between routes (pages) in our web application.
     let navigator = use_navigator().expect("Couldn't get the navigator");
 
+    // This checks if the user is already logged in by reading a boolean from the browser's Local Storage.
+    // If it's `true`, we log a message and redirect the user to the Home page without showing the login form.
     if LocalStorage::get::<bool>("login").unwrap_or_else(|_| false) == true {
         log!("Already logged in");
         navigator.replace(&Route::Home);
     }
 
+    // Create a piece of state (`user_state`) that holds an initial "unauthorized" user
+    // with some default test data (username, email, password, name, and birth date).
     let user_state = use_state(|| {
         UserManager::new(
             "TestUser".to_string(),
@@ -29,10 +45,12 @@ pub fn LoginPage() -> Html {
         )
     });
 
+    // Two pieces of state to store whatever the user types in the email and password fields.
     let email = use_state(|| "".to_string());
     let password = use_state(|| "".to_string());
     let error_message = use_state(|| "".to_string());
 
+    // This callback is triggered when the user clicks the "Log in" button.
     let on_login = {
         let user_state = user_state.clone();
         let email = email.clone();
@@ -40,15 +58,19 @@ pub fn LoginPage() -> Html {
         let error_message = error_message.clone();
 
         Callback::from(move |_| {
+            // We only attempt to log in if the current user state is `Unauthorized`.
             if let UserState::Unauthorized(manager) = &*user_state {
+                // Call the `login` method on our `UserManager`, passing in the email and password.
                 match manager.clone().login(&email, &password) {
+                    // If login is successful, we set a new user state and clear the error message.
                     Ok(new_state) => {
                         user_state.set(new_state);
                         error_message.set("".to_string());
                         log!("User logged in successfully!");
-
+                        // After successful login, navigate to the Home page.
                         navigator.push(&Route::Home);
                     }
+                     // If there's an error, we display it and log it to the console.
                     Err(err) => {
                         error_message.set(err.clone());
                         error!("Login error", err);
@@ -57,7 +79,7 @@ pub fn LoginPage() -> Html {
             }
         })
     };
-
+// The HTML (using Yew's JSX-like syntax) that we render for the login page.
     html! {
         <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa;">
             <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f5f5f5;">
