@@ -1,4 +1,5 @@
-# Rust Blog
+# Rust Blog - OBS: make sure the URL is http://localhost:8080/ after running.
+
 
 ## How to Start the Project  
 To get started with this project, follow these steps:
