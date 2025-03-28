@@ -1,5 +1,9 @@
 # Rust Blog - OBS: make sure the URL is http://localhost:8080/ after running.
 
+## To log in, please use:
+**Email:** test@example.com  
+**Password:** password123
+
 
 ## How to Start the Project  
 To get started with this project, follow these steps:
